@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MemAppender.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">assign251_2</a> &gt; <a href="index.source.html" class="el_package">default</a> &gt; <span class="el_source">MemAppender.java</span></div><h1>MemAppender.java</h1><pre class="source lang-java linenums">import org.apache.log4j.AppenderSkeleton;
+import org.apache.log4j.Layout;
+import org.apache.log4j.spi.LoggingEvent;
+
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+public class MemAppender extends AppenderSkeleton implements MemAppenderMBean{
+    private List&lt;LoggingEvent&gt; loglist;
+<span class="fc" id="L12">    private Layout memLayout = DefaultMemLayout.getInstance();</span>
+    private long maxSize;
+<span class="fc" id="L14">    private static long number = 0;</span>
+    private int point;
+<span class="fc" id="L16">    public static volatile MemAppender instance = null;</span>
+
+    public static MemAppender getInstance(){
+<span class="fc bfc" id="L19" title="All 2 branches covered.">        if(instance == null){</span>
+<span class="fc" id="L20">            synchronized (MemAppender.class) {</span>
+<span class="pc bpc" id="L21" title="1 of 2 branches missed.">                if(instance==null)</span>
+<span class="fc" id="L22">                    instance = new MemAppender();</span>
+<span class="fc" id="L23">            }</span>
+        }
+<span class="fc" id="L25">        instance.clear();</span>
+<span class="fc" id="L26">        instance.resetNumber();</span>
+<span class="fc" id="L27">        instance.setLayout(DefaultMemLayout.getInstance());</span>
+<span class="fc" id="L28">        return instance;</span>
+    }
+<span class="fc" id="L30">    private MemAppender() {</span>
+<span class="fc" id="L31">        this.maxSize=10;</span>
+<span class="fc" id="L32">        this.point=0;</span>
+<span class="fc" id="L33">        this.layout=DefaultMemLayout.getInstance();</span>
+<span class="fc" id="L34">        this.loglist=new LinkedList&lt;&gt;();</span>
+<span class="fc" id="L35">    }</span>
+
+    public void setLogList(List&lt;LoggingEvent&gt; loglist){
+<span class="fc" id="L38">        this.loglist=loglist;</span>
+<span class="fc" id="L39">    }</span>
+
+    @Override
+    protected void append(LoggingEvent loggingEvent) {
+<span class="fc bfc" id="L43" title="All 2 branches covered.">        if (point &lt; maxSize){</span>
+<span class="fc" id="L44">            loglist.add(loggingEvent);</span>
+<span class="fc" id="L45">            point +=1;</span>
+        }
+        else{
+<span class="fc" id="L48">            number+=1;</span>
+<span class="fc" id="L49">            loglist.remove(0);</span>
+<span class="fc" id="L50">            loglist.add(loggingEvent);</span>
+        }
+<span class="fc" id="L52">    }</span>
+
+    @Override
+    public void close() {
+<span class="fc" id="L56">    }</span>
+
+    @Override
+    public boolean requiresLayout() {
+<span class="nc" id="L60">        return false;</span>
+    }
+    public List&lt;LoggingEvent&gt; getCurrentLogs(){
+<span class="fc" id="L63">        return Collections.unmodifiableList(loglist);</span>
+    }
+
+    public List&lt;String&gt; getEventStrings() {
+<span class="fc" id="L67">        return this.getLogMessages();</span>
+    }
+
+    public void setLayout(Layout layout){
+<span class="fc" id="L71">        memLayout = layout;</span>
+<span class="fc" id="L72">    }</span>
+
+    public void printLogs(){
+<span class="fc" id="L75">        loglist.forEach(logging-&gt;System.out.println(memLayout.format(logging)));</span>
+<span class="fc" id="L76">        loglist.clear();</span>
+<span class="fc" id="L77">        point = 0;</span>
+<span class="fc" id="L78">    }</span>
+
+    public void setMaxSize(long size){
+<span class="fc" id="L81">        maxSize = size;</span>
+<span class="fc" id="L82">    }</span>
+    public void resetNumber(){
+<span class="fc" id="L84">        number = 0;</span>
+<span class="fc" id="L85">    }</span>
+
+    @Override
+    public List&lt;String&gt; getLogMessages() {
+<span class="fc" id="L89">        return Collections.unmodifiableList(loglist.stream().map(logging-&gt;memLayout.format(logging)).collect(Collectors.toList()));</span>
+    }
+
+    @Override
+    public long getSize() {
+<span class="nc" id="L94">        return loglist.size();</span>
+    }
+
+    public long getDiscardedLogCount(){
+<span class="fc" id="L98">        return number;</span>
+    }
+    public void clear() {
+<span class="fc" id="L101">        loglist.clear();</span>
+<span class="fc" id="L102">        point = 0;</span>
+<span class="fc" id="L103">    }</span>
+
+    public static class DefaultMemLayout extends Layout {
+<span class="fc" id="L106">        public static volatile DefaultMemLayout instance = null;</span>
+        private static final String SPLIT=&quot;---&quot;;
+
+        public static DefaultMemLayout getInstance(){
+<span class="fc bfc" id="L110" title="All 2 branches covered.">            if(instance == null){</span>
+<span class="fc" id="L111">                synchronized (DefaultMemLayout.class) {</span>
+<span class="fc" id="L112">                    instance = new DefaultMemLayout();</span>
+<span class="fc" id="L113">                }</span>
+            }
+<span class="fc" id="L115">            return instance;</span>
+        }
+        private DefaultMemLayout() {
+
+        }
+        @Override
+        public String format(LoggingEvent loggingEvent) {
+<span class="fc" id="L122">            return loggingEvent.getThreadName()+SPLIT+loggingEvent.getLoggerName()+SPLIT+loggingEvent.getLevel().toString().toLowerCase();</span>
+        }
+
+        @Override
+        public boolean ignoresThrowable() {
+<span class="fc" id="L127">            return false;</span>
+        }
+
+        @Override
+        public void activateOptions() {
+
+<span class="nc" id="L133">        }</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

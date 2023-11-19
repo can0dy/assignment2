@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>VelocityLayout.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">assign251_2</a> &gt; <a href="index.source.html" class="el_package">default</a> &gt; <span class="el_source">VelocityLayout.java</span></div><h1>VelocityLayout.java</h1><pre class="source lang-java linenums">import org.apache.log4j.PatternLayout;
+import org.apache.log4j.spi.LoggingEvent;
+import org.apache.velocity.VelocityContext;
+import org.apache.velocity.app.Velocity;
+
+import java.io.StringWriter;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
+
+public class VelocityLayout extends PatternLayout {
+    private final String pattern;
+<span class="fc" id="L13">    private static final DateTimeFormatter formatter=DateTimeFormatter.ofPattern(&quot;yyyy-MM-dd HH:mm:ss&quot;,Locale.CHINA);</span>
+<span class="fc" id="L14">    public VelocityLayout(String s){</span>
+<span class="fc" id="L15">        pattern = s;</span>
+<span class="fc" id="L16">    }</span>
+    @Override
+    public String format(LoggingEvent loggingEvent) {
+<span class="fc" id="L19">        StringWriter stringWriter = new StringWriter();</span>
+<span class="fc" id="L20">        Velocity.init();</span>
+<span class="fc" id="L21">        VelocityContext velocityContext = new VelocityContext();</span>
+<span class="fc" id="L22">        velocityContext.put(&quot;c&quot;,loggingEvent.getLoggerName());</span>
+<span class="fc" id="L23">        velocityContext.put(&quot;d&quot;, LocalDateTime.now().format(formatter));</span>
+<span class="fc" id="L24">        velocityContext.put(&quot;m&quot;,loggingEvent.getMessage());</span>
+<span class="fc" id="L25">        velocityContext.put(&quot;p&quot;,loggingEvent.getLevel());</span>
+<span class="fc" id="L26">        velocityContext.put(&quot;t&quot;,loggingEvent.getThreadName());</span>
+<span class="fc" id="L27">        velocityContext.put(&quot;n&quot;,&quot;\n&quot;);</span>
+<span class="fc" id="L28">        Velocity.evaluate(velocityContext,stringWriter,&quot;myString&quot;,pattern);</span>
+<span class="fc" id="L29">        return stringWriter.toString();</span>
+    }
+
+    @Override
+    public boolean ignoresThrowable() {
+<span class="nc" id="L34">        return false;</span>
+    }
+
+    @Override
+    public void activateOptions() {
+
+<span class="nc" id="L40">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.7.202105040129</span></div></body></html>

@@ -1,0 +1,4 @@
+MemAppenderMBean.class
+MemAppender$DefaultMemLayout.class
+MemAppender.class
+VelocityLayout.class
